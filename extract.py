@@ -42,16 +42,9 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from transform import transform_data
 
+#extraction des données depuis une page web produit  et appelle transform_data ppour transformer les données en dictionnaire
 def extract_book_data(url: str):
-    """
-    Extraction des données depuis la page web et appelle transform_data pour transformer les données en dict
-    Extraction de l'image et stockage
-    Args:
-        url: URL de la page du livre
-
-    Returns:
-    Dict contenant les données tranformées du livre
-    """
+   
     page = requests.get(url)
     soup = BeautifulSoup(page.content, 'html.parser')
 
@@ -65,6 +58,6 @@ def extract_book_data(url: str):
     data_clean, img_name = transform_data(url, title, product_information, description, category, star_review, img_url)
 
     img = requests.get(img_url)  # stockage de l'image
-    # store_img(img.content, img_name, data_clean["category"])
+    
 
     return data_clean
