@@ -1,4 +1,3 @@
-# transform.py
 import re
 
 def transform_data(book_data):

@@ -10,4 +10,13 @@ Les fichiers :
 - `utils.py` : Fonctions utilitaires (pagination, téléchargement d'images)
 - `main.py` : Script principal pour exécuter le processus ETL
 
+Dans le terminal : 
+
+    Installez les bibliothèques nécessaires avec : 
+    pip install -r requirements.txt
+
+    Puis executez le script avec : 
+    python main.py
+
+
 

@@ -1,11 +1,10 @@
-# utils.py
 import requests
 import os
 import time
 from bs4 import BeautifulSoup
 
 def paginate_category(category_url):
-    """Retourne toutes les pages d'une catégorie avec pagination."""
+    "Retourne toutes les pages d'une catégorie avec pagination."
     pages = [category_url]
     while True:
         response = requests.get(category_url)
@@ -20,7 +19,7 @@ def paginate_category(category_url):
     return pages
 
 def download_image(image_url, folder='images'):
-    """Télécharge et enregistre une image dans le dossier spécifié."""
+    "Télécharge et enregistre une image dans le dossier spécifié."
     if not os.path.exists(folder):
         os.makedirs(folder)
     image_name = os.path.join(folder, image_url.split('/')[-1])
