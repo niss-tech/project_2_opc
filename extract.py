@@ -1,63 +1,30 @@
-# def extract_book_data(url: str):
-#     # Requête pour récupérer le contenu de la page
-#     page = requests.get(url)
-#     soup = BeautifulSoup(page.content, 'html.parser')
-
-#     # Extraction du titre
-#     title = soup.body.h1.string
-
-#     # Récupération des informations générales
-#     product_information = soup.findAll(['td'])
-
-#     # Extraction de la catégorie
-#     category = soup.ul.find_all('li')[2].a.string
-
-#     # Extraction de la description du produit
-#     product_description = soup.find('article').find_all('p')[3].get_text(strip=True)
-
-#     # Extraction de l'évaluation en étoiles
-#     review_rating = soup.find(class_="star-rating")["class"][1]
-
-#     # Extraction des URLs des images et transformation en URLs absolues
-#     img_urls = [urljoin(url, img.get('src')) for img in soup.find_all('img') if img.get('src')]
-
-#     # Retour des données sous forme de dictionnaire
-#     return {
-#         "product_page_url": url,
-#         "title": title,
-#         "universal_product_code": product_information[0],  # Code UPC
-#         "price_excluding_tax": product_information[3],
-#         "price_including_tax": product_information[2],
-#         "number_available":int(product_information[5].split()[0]),  # Nombre disponible
-#         "product_description": product_description,
-#         "category": category,
-#         "review_rating": review_rating,
-#         "image_url": img_urls,
-        
-#     }
-
-
+# extract.py
 import requests
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-from transform import transform_data
 
-#extraction des données depuis une page web produit  et appelle transform_data ppour transformer les données en dictionnaire
-def extract_book_data(url: str):
-   
-    page = requests.get(url)
-    soup = BeautifulSoup(page.content, 'html.parser')
+def get_book_data(book_url):
+    """Extrait les informations d'un livre à partir de son URL."""
+    response = requests.get(book_url)
+    soup = BeautifulSoup(response.content, 'html.parser')
 
-    title = soup.body.h1.string
-    product_information = soup.findAll(['td']) # récupération de la table product information
-    category = soup.ul.findAll('li')[2].a.string
-    description = soup.head.find(attrs={"name": "description"})['content']
-    star_review = soup.find(class_="star-rating")["class"][1]
-    img_url = urljoin(url, soup.find('img')["src"])
+    data = {
+        "product_page_url": book_url,
+        "universal_product_code": soup.find('th', text='UPC').find_next_sibling('td').text,
+        "title": soup.find('h1').text,
+        "price_including_tax": soup.find('th', text='Price (incl. tax)').find_next_sibling('td').text,
+        "price_excluding_tax": soup.find('th', text='Price (excl. tax)').find_next_sibling('td').text,
+        "number_available": soup.find('th', text='Availability').find_next_sibling('td').text,
+        "product_description": soup.select_one('meta[name="description"]')['content'].strip(),
+        "category": soup.find('ul', class_='breadcrumb').find_all('a')[2].text,
+        "review_rating": soup.find('p', class_='star-rating')['class'][1],
+        "image_url": 'http://books.toscrape.com/' + soup.find('img')['src']
+    }
+    return data
 
-    data_clean, img_name = transform_data(url, title, product_information, description, category, star_review, img_url)
-
-    img = requests.get(img_url)  # stockage de l'image
-    
-
-    return data_clean
+def get_books_from_category(category_url):
+    """Récupère les URLs des livres pour une catégorie spécifique."""
+    response = requests.get(category_url)
+    soup = BeautifulSoup(response.content, 'html.parser')
+    book_urls = ['http://books.toscrape.com/catalogue/' + a['href'].replace('../../../', '')
+                 for a in soup.select('h3 a')]
+    return book_urls

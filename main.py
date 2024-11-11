@@ -1,32 +1,32 @@
-import csv
-from extract import extract_book_data
+# main.py
+from extract import get_books_from_category, get_book_data
+from transform import transform_data
+from load import save_to_csv
+from utils import paginate_category, download_image
 
-def main():
-    # URL du livre à extraire
-    url = "https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html"
+def etl_process(category_url, output_filename):
+    all_books_data = []
     
-    # Appel de la fonction pour extraire les données du livre
-    try:
-        book_data = extract_book_data(url)
+    # Pagination dans la catégorie
+    pages = paginate_category(category_url)
+    for page_url in pages:
+        # Récupérer les URLs des livres dans la page
+        book_urls = get_books_from_category(page_url)
+        for book_url in book_urls:
+            # Extraction des données du livre
+            book_data = get_book_data(book_url)
+            
+            # Transformation des données
+            transformed_data = transform_data(book_data)
+            all_books_data.append(transformed_data)
+            
+            # Télécharger l'image
+            download_image(transformed_data["image_url"])
+    
+    # Charger les données dans un fichier CSV
+    save_to_csv(all_books_data, output_filename)
+    print(f"ETL terminé ! Données enregistrées dans {output_filename}")
 
-        # Afficher les données extraites et transformées
-        print("Données du livre :")
-        for key, value in book_data.items():
-            print(f"{key}: {value}")
-
-        # Enregistrement des données dans un fichier CSV
-        with open('book_data.csv', mode='a', newline='', encoding='utf-8') as csv_file:
-            writer = csv.DictWriter(csv_file, fieldnames=book_data.keys())
-            # Si le fichier est vide, écrire les en-têtes
-            if csv_file.tell() == 0:
-                writer.writeheader()
-            writer.writerow(book_data)  # Écrire les données du livre
-
-    except Exception as e:
-        print(f"Une erreur est survenue : {e}")
-
-if __name__ == "__main__":
-    main()
-
-
-
+# Exécution de l'ETL pour une catégorie
+category_url = 'https://books.toscrape.com/catalogue/category/books/womens-fiction_9/index.html'
+etl_process(category_url, 'books_in_category.csv')
