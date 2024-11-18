@@ -1,31 +1,30 @@
-from extract import get_books_from_category, get_book_data
-from transform import transform_data
-from load import save_to_csv
-from utils import paginate_category, download_image
+from extract import fetch_page_content, extract_category_links, extract_product_links
+from transform import parse_product_page
+from load import save_to_csv, download_image
 
-def etl_process(category_url, output_filename):
-    all_books_data = []
-    
-    # Pagination dans la catégorie
-    pages = paginate_category(category_url)
-    for page_url in pages:
-        # Récupérer les URLs des livres dans la page
-        book_urls = get_books_from_category(page_url)
-        for book_url in book_urls:
-            # Extraction des données du livre
-            book_data = get_book_data(book_url)
-            
-            # Transformation des données
-            transformed_data = transform_data(book_data)
-            all_books_data.append(transformed_data)
-            
-            # Téléchargement de l'image
-            download_image(transformed_data["image_url"])
-    
-    # Charger les données dans un fichier CSV
-    save_to_csv(all_books_data, output_filename)
-    print(f"ETL terminé ! Données enregistrées dans {output_filename}")
+def scrape_all_categories(base_url):
+    """Scrape toutes les catégories et sauvegarde les données dans des CSV."""
+    category_urls = extract_category_links(base_url)
+    for category_url in category_urls:
+        category_name = category_url.split('/')[-2]  # Nom de la catégorie
+        print(f"Scraping catégorie : {category_name}")
+        
+        # Extraire les URLs des produits
+        product_urls = extract_product_links(category_url)
+        
+        # Scraper les données de chaque produit
+        all_books = []
+        for product_url in product_urls:
+            soup = fetch_page_content(product_url)
+            if soup is None:  # Ignorez les pages inexistantes
+                continue
+            book_data = parse_product_page(soup, product_url)
+            all_books.append(book_data)
+            download_image(book_data['image_url'])
+        
+        # Sauvegarder dans un fichier CSV
+        save_to_csv(all_books, f"{category_name}_books.csv")
 
-
-category_url = 'https://books.toscrape.com/catalogue/category/books/womens-fiction_9/index.html'
-etl_process(category_url, 'books_in_category.csv')
+if __name__ == "__main__":
+    BASE_URL = "https://books.toscrape.com/index.html"
+    scrape_all_categories(BASE_URL)
