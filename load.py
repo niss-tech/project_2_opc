@@ -3,10 +3,23 @@ import csv
 import requests
 
 def save_to_csv(data, output_file):
-    """Sauvegarde les données dans un fichier CSV."""
+    """Sauvegarde les données dans un fichier CSV dans un dossier extérieur."""
     if not data:
         return
-    with open(output_file, 'w', newline='', encoding='utf-8') as csvfile:
+    
+    # Définir le chemin du dossier extérieur "fichiers_csv"
+    parent_directory = os.path.dirname(os.getcwd())  # Chemin du dossier parent
+    csv_folder = os.path.join(parent_directory, 'fichiers_csv')  # Chemin complet du dossier
+
+    
+    if not os.path.exists(csv_folder):
+        os.makedirs(csv_folder)
+
+    # Définir le chemin complet du fichier CSV
+    output_path = os.path.join(csv_folder, output_file)
+
+    
+    with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=data[0].keys())
         writer.writeheader()
         writer.writerows(data)
